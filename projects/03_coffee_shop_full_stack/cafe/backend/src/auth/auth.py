@@ -78,13 +78,13 @@ def check_permissions(permission, payload):
     if 'permissions' not in payload:
         raise AuthError({
             'code': 'invalid_permissions',
-            'description': 'Token payload must include "permissions" list'
+            'description': 'Token payload must include "permissions" list.'
         }, 400)
 
     if permission not in payload['permissions']:
         raise AuthError({
             'code': 'invalid_permissions',
-            'description': f'Permissions list is missing required permission'
+            'description': f'Permissions list is missing required permission.'
         }, 403)
 
     return True

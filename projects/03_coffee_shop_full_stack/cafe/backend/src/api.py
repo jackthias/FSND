@@ -82,14 +82,16 @@ def create_drink():
     recipe_obj = data.get('recipe', {})
     recipe = json.dumps(recipe_obj)
     try:
-        if len(title) < 1 or len(recipe) < 1:
-            abort(400)
+        if len(title) < 1:
+            abort(400, '"title" is a required field in request body.')
+        if len(recipe_obj) < 1:
+            abort(400, '"recipe" is a required field in request body.')
         validate_recipe(recipe_obj)
         drink = Drink(title=title, recipe=recipe)
         drink.insert()
     except Exception as e:
-        if e.code == 400:
-            abort(400)
+        if e.code in [400]:
+            abort(e.code, e.description)
         abort(422)
     return jsonify({
         "success": True,
@@ -102,18 +104,18 @@ recipe_params = ('name', 'color', 'parts')
 
 def validate_recipe(recipe):
     if not isinstance(recipe, list):
-        abort(400)
+        abort(400, "Recipe must be a list of objects.")
     for item in recipe:
         if not isinstance(item, dict):
-            abort(400)
+            abort(400, "Recipe must be a list of objects.")
         if not all(key in item for key in recipe_params):
-            abort(400)
+            abort(400, f"Recipe objects require {recipe_params}")
         if not isinstance(item['name'], str):
-            abort(400)
+            abort(400, "Name of ingredient in recipe must be a string.")
         if not isinstance(item['color'], str):
-            abort(400)
+            abort(400, "Color of ingredient in recipe must be a string.")
         if not isinstance(item['parts'], int):
-            abort(400)
+            abort(400, "Parts of ingredient in recipe must be an integer.")
 
 
 @app.route('/drinks/<int:drink_id>', methods=['PATCH'])
@@ -146,10 +148,8 @@ def update_drink(drink_id):
             drink.recipe = json.dumps(recipe_candidate)
         drink.update()
     except Exception as e:
-        if e.code == 404:
-            abort(404)
-        if e.code == 400:
-            abort(400)
+        if e.code in [400, 404]:
+            abort(e.code, e.description)
         abort(422)
     return jsonify({
         'success': True,
@@ -181,8 +181,8 @@ def delete_drink(drink_id):
             'delete': drink_id
         })
     except Exception as e:
-        if e.code == 404:
-            abort(404)
+        if e.code in [404]:
+            abort(e.code, e.description)
         abort(422)
 
 
