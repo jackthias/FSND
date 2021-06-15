@@ -27,7 +27,7 @@ def get_drinks():
     GET /drinks
         it should be a public endpoint
         it should contain only the drink.short() data representation
-    returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
+    :return: status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
     """
     return jsonify({
@@ -36,14 +36,22 @@ def get_drinks():
     })
 
 
-'''
-@TODO implement endpoint
+@app.route('/drinks-detail', methods=['GET'])
+@requires_auth('get:drinks-detail')
+def get_drinks_details(token):
+    """
     GET /drinks-detail
         it should require the 'get:drinks-detail' permission
         it should contain the drink.long() data representation
-    returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
+
+    :return: status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
-'''
+    """
+    return jsonify({
+        "success": True,
+        "drinks": [drink.long() for drink in Drink.query.all()]
+    })
+
 
 '''
 @TODO implement endpoint
