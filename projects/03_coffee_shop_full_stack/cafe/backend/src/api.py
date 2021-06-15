@@ -186,36 +186,99 @@ def delete_drink(drink_id):
         abort(422)
 
 
-## Error Handling
-'''
-Example error handling for unprocessable entity
-'''
+# Error Handling
+
+
 @app.errorhandler(422)
 def unprocessable(error):
+    """
+    error handling for unprocessable entity
+    :param error: originating error
+    :return: json error response
+    """
     return jsonify({
-                    "success": False, 
-                    "error": 422,
-                    "message": "unprocessable"
-                    }), 422
-
-'''
-@TODO implement error handlers using the @app.errorhandler(error) decorator
-    each error handler should return (with approprate messages):
-             jsonify({
-                    "success": False, 
-                    "error": 404,
-                    "message": "resource not found"
-                    }), 404
-
-'''
-
-'''
-@TODO implement error handler for 404
-    error handler should conform to general task above 
-'''
+        "success": False,
+        "error": 422,
+        "message": "unprocessable",
+        "details": get_error_description(error)
+    }), 422
 
 
-'''
-@TODO implement error handler for AuthError
-    error handler should conform to general task above 
-'''
+@app.errorhandler(400)
+def bad_request(error):
+    """
+    error handling for bad request
+    :param error: originating error
+    :return: json error response
+    """
+    return jsonify({
+        "success": False,
+        "error": 400,
+        "message": "Bad request",
+        "details": get_error_description(error)
+    }), 400
+
+
+@app.errorhandler(405)
+def method_not_allowed(error):
+    """
+    error handling for method not allowed
+    :param error: originating error
+    :return: json error response
+    """
+    return jsonify({
+        "success": False,
+        "error": 405,
+        "message": "Method not allowed",
+        "details": get_error_description(error)
+    }), 405
+
+
+@app.errorhandler(404)
+def not_found(error):
+    """
+    error handling for not found
+    :param error: originating error
+    :return: json error response
+    """
+    return jsonify({
+        "success": False,
+        "error": 404,
+        "message": "Not found",
+        "details": get_error_description(error)
+    }), 404
+
+
+@app.errorhandler(401)
+def unauthorized(error):
+    """
+    error handling for unauthorized
+    :param error: originating error
+    :return: json error response
+    """
+    return jsonify({
+        "success": False,
+        "error": 401,
+        "message": "Unauthorized",
+        "details": get_error_description(error)
+    }), 401
+
+
+@app.errorhandler(403)
+def forbidden(error):
+    """
+    error handling for forbidden
+    :type error: Exception
+    :param error: originating error
+    :return: json error response
+    """
+    return jsonify({
+        "success": False,
+        "error": 403,
+        "message": "Forbidden",
+        "details": get_error_description(error)
+    }), 403
+
+
+def get_error_description(error):
+    return error.description if error.description else ""

@@ -76,10 +76,17 @@ def check_permissions(permission, payload):
         return True
 
     if 'permissions' not in payload:
-        abort(400)
+        raise AuthError({
+            'code': 'invalid_permissions',
+            'description': 'Token payload must include "permissions" list'
+        }, 400)
 
     if permission not in payload['permissions']:
-        abort(403)
+        raise AuthError({
+            'code': 'invalid_permissions',
+            'description': f'Permissions list is missing required permission'
+        }, 403)
+
     return True
 
 
@@ -163,9 +170,12 @@ def requires_auth(permission=''):
                 payload = verify_decode_jwt(token)
             except AuthError as e:
                 print(e)
-                abort(401)
+                abort(401, e.error['description'])
 
-            check_permissions(permission, payload)
+            try:
+                check_permissions(permission, payload)
+            except AuthError as e:
+                abort(403, e.error['description'])
             return f(*args, **kwargs)
 
         return wrapper
