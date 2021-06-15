@@ -22,10 +22,13 @@ CORS(app)
 # Utilities
 
 
-def fetch_drinks(long=False):
+def fetch_drinks(long=False, id=None):
+    q = Drink.query
+    if id is not None:
+        q = q.filter(Drink.id == id)
     if long:
-        return [drink.long() for drink in Drink.query.all()]
-    return [drink.short() for drink in Drink.query.all()]
+        return [drink.long() for drink in q.all()]
+    return [drink.short() for drink in q.all()]
 
 
 # ROUTES
@@ -71,12 +74,12 @@ def create_drink():
         it should require the 'post:drinks' permission
         it should contain the drink.long() data representation
 
-    :return: status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
-        or appropriate status code indicating reason for failure
+    :return: status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly
+    created drink or appropriate status code indicating reason for failure
     """
     data = request.get_json()
     title = data.get('title', '')
-    recipe_obj = data.get('recipe', '')
+    recipe_obj = data.get('recipe', {})
     recipe = json.dumps(recipe_obj)
     try:
         if len(title) < 1 or len(recipe) < 1:
@@ -113,17 +116,46 @@ def validate_recipe(recipe):
             abort(400)
 
 
-'''
-@TODO implement endpoint
-    PATCH /drinks/<id>
-        where <id> is the existing model id
-        it should respond with a 404 error if <id> is not found
-        it should update the corresponding row for <id>
+@app.route('/drinks/<int:drink_id>', methods=['PATCH'])
+@requires_auth('patch:drinks')
+def update_drink(drink_id):
+    """
+    PATCH /drinks/<drink_id>
+        where <drink_id> is the existing model id
+        it should respond with a 404 error if <drink_id> is not found
+        it should update the corresponding row for <drink_id>
         it should require the 'patch:drinks' permission
         it should contain the drink.long() data representation
-    returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the updated drink
-        or appropriate status code indicating reason for failure
-'''
+
+    :param drink_id: is the existing model id
+    :return: status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the
+    updated drink or appropriate status code indicating reason for failure
+    """
+    data = request.get_json()
+    if len(data) < 1:
+        abort(400)
+    try:
+        drink = Drink.query.get(drink_id)
+        if drink is None:
+            abort(404)
+        if 'title' in data:
+            drink.title = data['title']
+        if 'recipe' in data:
+            recipe_candidate = data['recipe']
+            validate_recipe(recipe_candidate)
+            drink.recipe = json.dumps(recipe_candidate)
+        drink.update()
+    except Exception as e:
+        if e.code == 404:
+            abort(404)
+        if e.code == 400:
+            abort(400)
+        abort(422)
+    return jsonify({
+        'success': True,
+        'drinks': fetch_drinks(long=True, id=drink_id)
+    })
+
 
 '''
 @TODO implement endpoint
@@ -136,20 +168,18 @@ def validate_recipe(recipe):
         or appropriate status code indicating reason for failure
 '''
 
-# Error Handling
+
+## Error Handling
 '''
 Example error handling for unprocessable entity
 '''
-
-
 @app.errorhandler(422)
 def unprocessable(error):
     return jsonify({
-        "success": False,
-        "error": 422,
-        "message": "unprocessable"
-    }), 422
-
+                    "success": False, 
+                    "error": 422,
+                    "message": "unprocessable"
+                    }), 422
 
 '''
 @TODO implement error handlers using the @app.errorhandler(error) decorator
@@ -166,6 +196,7 @@ def unprocessable(error):
 @TODO implement error handler for 404
     error handler should conform to general task above 
 '''
+
 
 '''
 @TODO implement error handler for AuthError
