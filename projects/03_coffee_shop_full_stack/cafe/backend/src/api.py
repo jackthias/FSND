@@ -280,5 +280,21 @@ def forbidden(error):
     }), 403
 
 
+@app.errorhandler(AuthError)
+def generic_auth_error(error):
+    """
+    error handling for AuthError
+    :type error: AuthError
+    :param error: originating error
+    :return: json error response
+    """
+    return jsonify({
+        "success": False,
+        "error": 401,
+        "message": "Unauthorized",
+        "details": get_error_description(error)
+    }), 401
+
+
 def get_error_description(error):
     return error.description if error.description else ""
