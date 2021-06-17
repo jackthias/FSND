@@ -139,7 +139,7 @@ def update_drink(drink_id):
     try:
         drink = Drink.query.get(drink_id)
         if drink is None:
-            abort(404)
+            abort(404, f"Drink #{drink_id} not found.")
         if 'title' in data:
             drink.title = data['title']
         if 'recipe' in data:
